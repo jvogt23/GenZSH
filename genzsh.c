@@ -17,7 +17,12 @@ void mainLoop(void) {
     int status;
 
     do {
-        printf("> ");
+        char CWD[PATH_MAX];
+        if (getcwd(CWD, sizeof(CWD)) != NULL) {
+            printf("It\'s giving %s> ", CWD);
+        } else {
+            printf("> ");
+        }
         line = readLine();
         args = splitLine(line);
         status = execute(args);
@@ -130,6 +135,11 @@ int launchProc(char ** args) {
     return 1;
 }
 
+/**
+ * Attempts to launch a process or builtin given a command and list of arguments.
+ * Throws error from child process if it fails or waits for process to return if it is successful.
+ * @return result of the process
+*/
 int execute(char ** args) {
     int i;
     if (args[0] == NULL) {
@@ -145,10 +155,17 @@ int execute(char ** args) {
 }
 
 //Builtin implementation
+
+//Self explanatory
 int num_builtins() {
     return sizeof(builtin_str) / sizeof(char *);
 }
 
+/**
+ * Changes current working directory.
+ * Requires an argument for the directory to enter.
+ * @return a status code. Should always be 1 to return to the shell.
+*/
 int genz_cd(char ** args) {
     if (args[1] == NULL) {
         fprintf(stderr, 
@@ -161,6 +178,9 @@ int genz_cd(char ** args) {
     return 1;
 }
 
+/**
+ * Returns an incredibly helpful message that totally describes the app without any ironic use of slangs at all.
+*/
 int genz_help(char ** args) {
     int i;
     printf("James Vogt\'s GENZSH\n");
@@ -178,6 +198,27 @@ int genz_help(char ** args) {
     return 1;
 }
 
+/**
+ * Exits shell.
+*/
 int genz_exit(char ** args) {
     return 0;
+}
+
+// Insanely basic echo command accessed with 'yap'.
+// TODO: add escape sequence functionality, error checking and flags
+int genz_echo(char ** args) {
+    char ** ptr = args;
+    int ignore_yap = 0;
+    while (*ptr != 0) {
+        if (ignore_yap == 0) {
+            ignore_yap = 1;
+            ptr++;
+            continue;
+        }
+        printf("%s ", *ptr);
+        ptr++;
+    }
+    printf("\n");
+    return 1;
 }
